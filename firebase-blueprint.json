@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Product category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "slug", "image", "description", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "A single product in a category",
+      "type": "object",
+      "properties": {
+        "categoryId": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["categoryId", "name", "slug", "image", "description", "features", "createdAt"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "A customer request for a quotation.",
+      "type": "object",
+      "properties": {
+        "productName": { "type": "string", "description": "Name of the requested product" },
+        "quantity": { "type": "string", "description": "Requested quantity" },
+        "size": { "type": "string", "description": "Requested size" },
+        "fabric": { "type": "string", "description": "Preferred fabric" },
+        "printingMethod": { "type": "string", "description": "Preferred printing method" },
+        "logoUrl": { "type": "string", "description": "URL to the uploaded logo image" },
+        "name": { "type": "string", "description": "Customer's name" },
+        "email": { "type": "string", "description": "Customer's email address" },
+        "phone": { "type": "string", "description": "Customer's phone/WhatsApp number" },
+        "country": { "type": "string", "description": "Customer's country" },
+        "message": { "type": "string", "description": "Additional message" },
+        "status": { "type": "string", "description": "Status of the inquiry", "enum": ["new", "contacted"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["productName", "quantity", "size", "fabric", "printingMethod", "name", "email", "phone", "country", "status", "createdAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Admin configuration and state",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["superadmin"] }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "categories": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Stores product categories"
+    },
+    "products": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Stores all products"
+    },
+    "inquiries": {
+      "schema": { "$ref": "#/entities/Inquiry" },
+      "description": "Stores user inquiries mapping to the Inquiry entity"
+    },
+    "admins": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Stores admins who can view/manage inquiries"
+    }
+  }
+}

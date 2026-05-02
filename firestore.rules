@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        (request.auth.token.email_verified == true && request.auth.token.email == 'rayansportsofficial@gmail.com') ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      ); 
+    }
+
+    // Phase 2: Validation Blueprints
+    function isValidInquiry(data) {
+      return data.keys().hasAll(['productName', 'quantity', 'size', 'fabric', 'printingMethod', 'name', 'email', 'phone', 'country', 'status', 'createdAt'])
+        && data.keys().size() >= 11
+        && data.keys().size() <= 13 // message and logoUrl are optional
+        && data.productName is string && data.productName.size() <= 200
+        && data.quantity is string && data.quantity.size() <= 100
+        && data.size is string && data.size.size() <= 50
+        && data.fabric is string && data.fabric.size() <= 100
+        && data.printingMethod is string && data.printingMethod.size() <= 100
+        && data.name is string && data.name.size() <= 100
+        && data.email is string && data.email.size() <= 150
+        && data.phone is string && data.phone.size() <= 50
+        && data.country is string && data.country.size() <= 100
+        && data.status is string && data.status.matches('^(new|contacted)$')
+        && data.createdAt == request.time
+        && (!('message' in data) || (data.message is string && data.message.size() <= 2000))
+        && (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 500));
+    }
+
+    function checkAdmin(data) {
+      return data.keys().hasAll(['email', 'role'])
+        && data.keys().size() == 2
+        && data.email is string && data.email.size() <= 150
+        && data.role is string && data.role == 'superadmin';
+    }
+
+    function isStatusUpdate() {
+      return incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+
+    // Inquiries Collection
+    match /inquiries/{inquiryId} {
+      allow get: if isAdmin();
+      allow list: if isAdmin();
+      
+      allow create: if isValidId(inquiryId) && isValidInquiry(incoming());
+      
+      allow update: if isValidId(inquiryId) && isAdmin() && isStatusUpdate()
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().productName == existing().productName
+                    && incoming().name == existing().name
+                    && incoming().status in ['new', 'contacted'];
+      
+      allow delete: if isValidId(inquiryId) && isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && request.auth.uid == adminId;
+      allow list: if false; // Admins don't need to list admins for now
+      allow create: if false; // Manual setup or cloud function only
+      allow update: if false; // Immutable roles
+      allow delete: if false; // Manual removal only
+    }
+  }
+}
