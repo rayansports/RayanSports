@@ -19,10 +19,10 @@ export default function ProductsTab() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
-  const initialCategoryState = { name: '', slug: '', image: '', description: '' };
+  const initialCategoryState = { parentId: '', name: '', slug: '', image: '', description: '' };
   const [categoryForm, setCategoryForm] = useState(initialCategoryState);
 
-  const initialProductState = { categoryId: '', name: '', slug: '', image: '', description: '', features: [''] };
+  const initialProductState = { categoryId: '', name: '', slug: '', image: '', videoUrl: '', mediaUrls: [''], description: '', features: [''] };
   const [productForm, setProductForm] = useState(initialProductState);
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function ProductsTab() {
   const openCategoryForm = (category?: any) => {
     if (category) {
       setEditingId(category.id);
-      setCategoryForm({ name: category.name, slug: category.slug, image: category.image || '', description: category.description || '' });
+      setCategoryForm({ parentId: category.parentId || '', name: category.name, slug: category.slug, image: category.image || '', description: category.description || '' });
     } else {
       setEditingId(null);
       setCategoryForm(initialCategoryState);
@@ -63,6 +63,8 @@ export default function ProductsTab() {
         name: product.name, 
         slug: product.slug, 
         image: product.image || '', 
+        videoUrl: product.videoUrl || '',
+        mediaUrls: product.mediaUrls && product.mediaUrls.length ? product.mediaUrls : [''],
         description: product.description || '', 
         features: product.features && product.features.length ? product.features : [''] 
       });
@@ -88,6 +90,10 @@ export default function ProductsTab() {
         image: categoryForm.image,
         description: categoryForm.description
       };
+      
+      if (categoryForm.parentId) {
+        payload.parentId = categoryForm.parentId;
+      }
       
       if (!editingId) {
         payload.createdAt = serverTimestamp();
@@ -115,6 +121,10 @@ export default function ProductsTab() {
         description: productForm.description,
         features: productForm.features.filter(f => f.trim() !== '')
       };
+
+      if (productForm.videoUrl) payload.videoUrl = productForm.videoUrl;
+      const filteredMedia = productForm.mediaUrls.filter(m => m.trim() !== '');
+      if (filteredMedia.length > 0) payload.mediaUrls = filteredMedia;
       
       if (!editingId) {
         payload.createdAt = serverTimestamp();
@@ -131,8 +141,8 @@ export default function ProductsTab() {
   };
 
   const deleteCategory = async (id: string, name: string) => {
-    if (products.some(p => p.categoryId === id)) {
-      alert(`Cannot delete category "${name}" because it contains products.`);
+    if (products.some(p => p.categoryId === id) || categories.some(c => c.parentId === id)) {
+      alert(`Cannot delete category "${name}" because it is in use by products or sub-categories.`);
       return;
     }
     if (!window.confirm(`Are you sure you want to delete category "${name}"?`)) return;
@@ -161,6 +171,15 @@ export default function ProductsTab() {
   
   const addFeature = () => setProductForm({ ...productForm, features: [...productForm.features, ''] });
   const removeFeature = (index: number) => setProductForm({ ...productForm, features: productForm.features.filter((_, i) => i !== index) });
+
+  const handleMediaChange = (index: number, value: string) => {
+    const newMedia = [...productForm.mediaUrls];
+    newMedia[index] = value;
+    setProductForm({ ...productForm, mediaUrls: newMedia });
+  };
+  
+  const addMedia = () => setProductForm({ ...productForm, mediaUrls: [...productForm.mediaUrls, ''] });
+  const removeMedia = (index: number) => setProductForm({ ...productForm, mediaUrls: productForm.mediaUrls.filter((_, i) => i !== index) });
 
   const filteredProducts = products.filter(p => {
     if (selectedCategory !== 'all' && p.categoryId !== selectedCategory) return false;
@@ -207,6 +226,13 @@ export default function ProductsTab() {
               <form onSubmit={saveCategory} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Parent Category (Optional)</label>
+                    <select value={categoryForm.parentId} onChange={e => setCategoryForm({...categoryForm, parentId: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all bg-white">
+                      <option value="">None (Main Category)</option>
+                      {categories.filter(c => !editingId || c.id !== editingId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Category Name</label>
                     <input required type="text" value={categoryForm.name} onChange={e => setCategoryForm({...categoryForm, name: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="e.g. American Football" />
                   </div>
@@ -214,7 +240,7 @@ export default function ProductsTab() {
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">URL Slug</label>
                     <input type="text" value={categoryForm.slug} onChange={e => setCategoryForm({...categoryForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="american-football (auto-generated)" />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Image URL</label>
                     <input required type="url" value={categoryForm.image} onChange={e => setCategoryForm({...categoryForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all" placeholder="https://..." />
                   </div>
@@ -247,13 +273,46 @@ export default function ProductsTab() {
                     <input type="text" value={productForm.slug} onChange={e => setProductForm({...productForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="pro-team-jersey" />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Image URL</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Primary Image URL</label>
                     <input required type="url" value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="https://..." />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Video URL (Optional)</label>
+                    <input type="url" value={productForm.videoUrl} onChange={e => setProductForm({...productForm, videoUrl: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="YouTube or video link..." />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Description</label>
                     <textarea required value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all" rows={3}></textarea>
                   </div>
+                  
+                  {/* Media Gallery List */}
+                  <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-3 flex items-center justify-between">
+                      <span>Additional Media Gallery Images</span>
+                      <button type="button" onClick={addMedia} className="text-brand-blue hover:text-blue-800 flex items-center gap-1">+ Add</button>
+                    </label>
+                    <div className="space-y-3">
+                      {productForm.mediaUrls.map((media, idx) => (
+                        <div key={idx} className="flex gap-2 relative group">
+                          <ImageIcon className="absolute left-3 top-3 w-4 h-4 text-slate-300" />
+                          <input 
+                            type="url" 
+                            value={media} 
+                            onChange={e => handleMediaChange(idx, e.target.value)} 
+                            className="w-full border border-slate-300 rounded-lg py-2.5 pr-10 pl-9 text-sm focus:ring-1 focus:ring-brand-blue outline-none transition-all" 
+                            placeholder="https://... secondary image/video" 
+                          />
+                          {productForm.mediaUrls.length > 1 && (
+                            <button type="button" onClick={() => removeMedia(idx)} className="absolute right-2 top-2 p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Features List */}
                   <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-3 flex items-center justify-between">
                       <span>Features / Highlights</span>

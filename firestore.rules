@@ -66,7 +66,8 @@ service cloud.firestore {
         && data.slug is string && data.slug.size() <= 100 && data.slug.matches('^[a-z0-9-]+$')
         && data.image is string && data.image.size() <= 1000
         && data.description is string && data.description.size() <= 2000
-        && data.createdAt == request.time;
+        && data.createdAt == request.time
+        && (string.length(data.get('parentId', '')) <= 128);
     }
 
     function isValidCategoryUpdate(incomingData, existingData) {
@@ -75,7 +76,8 @@ service cloud.firestore {
         && incomingData.slug is string && incomingData.slug.size() <= 100 && incomingData.slug.matches('^[a-z0-9-]+$')
         && incomingData.image is string && incomingData.image.size() <= 1000
         && incomingData.description is string && incomingData.description.size() <= 2000
-        && incomingData.createdAt == existingData.createdAt;
+        && incomingData.createdAt == existingData.createdAt
+        && (string.length(incomingData.get('parentId', '')) <= 128);
     }
 
     function isValidProduct(data) {
@@ -87,7 +89,9 @@ service cloud.firestore {
         && data.description is string && data.description.size() <= 10000
         && data.features is list && data.features.size() <= 20
         && (data.features.size() == 0 || data.features[0] is string)
-        && data.createdAt == request.time;
+        && data.createdAt == request.time
+        && (data.get('videoUrl', '') is string && string.length(data.get('videoUrl', '')) <= 1000)
+        && (data.get('mediaUrls', []) is list && data.get('mediaUrls', []).size() <= 10);
     }
 
     function isValidProductUpdate(incomingData, existingData) {
@@ -99,7 +103,9 @@ service cloud.firestore {
         && incomingData.description is string && incomingData.description.size() <= 10000
         && incomingData.features is list && incomingData.features.size() <= 20
         && (incomingData.features.size() == 0 || incomingData.features[0] is string)
-        && incomingData.createdAt == existingData.createdAt;
+        && incomingData.createdAt == existingData.createdAt
+        && (incomingData.get('videoUrl', '') is string && string.length(incomingData.get('videoUrl', '')) <= 1000)
+        && (incomingData.get('mediaUrls', []) is list && incomingData.get('mediaUrls', []).size() <= 10);
     }
 
     // Categories Collection
@@ -158,13 +164,35 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.email is string && data.email.size() <= 200
+        && data.role is string && data.role in ['admin', 'manager', 'editor', 'viewer']
+        && data.createdAt == request.time;
+    }
+
+    function isValidUserUpdate(incomingData, existingData) {
+      return incomingData.keys().hasAll(['email', 'role', 'createdAt'])
+        && incomingData.email is string && incomingData.email.size() <= 200
+        && incomingData.role is string && incomingData.role in ['admin', 'manager', 'editor', 'viewer']
+        && incomingData.createdAt == existingData.createdAt;
+    }
+
     // Admins Collection
     match /admins/{adminId} {
-      allow get: if isSignedIn() && request.auth.uid == adminId;
-      allow list: if false; // Admins don't need to list admins for now
-      allow create: if false; // Manual setup or cloud function only
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isAdmin() && incoming().keys().hasOnly(['email', 'role']) && incoming().email is string && incoming().role is string;
       allow update: if false; // Immutable roles
-      allow delete: if false; // Manual removal only
+      allow delete: if isAdmin() && adminId != request.auth.uid; // Manual removal only
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && isValidUser(incoming());
+      allow update: if isAdmin() && isValidUserUpdate(incoming(), existing());
+      allow delete: if isAdmin() && userId != request.auth.uid;
     }
   }
 }
