@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 
 // Helper for generic typing format and fallback
 enum OperationType {
@@ -16,7 +16,6 @@ enum OperationType {
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const auth = getAuth();
   const errInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -28,7 +27,10 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  alert(`Firestore Error: ${errInfo.error}\nCheck console for details.`);
+  if (operationType !== OperationType.LIST && operationType !== OperationType.GET) {
+    alert(`Firestore Action Failed: ${errInfo.error}\nIf permission denied, ensure you are an admin.`);
+  }
+  return errInfo.error;
 }
 
 export default function AdminDashboard() {
@@ -40,13 +42,13 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [slides, setSlides] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Slideshow form states
   const [editingSlideId, setEditingSlideId] = useState<string | null>(null);
   const [slideForm, setSlideForm] = useState({ image: '', title: '', subtitle: '', buttonText: '', buttonLink: '', enabled: true, order: 0 });
 
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoadingUser(false);
@@ -55,13 +57,19 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
+    setDataError(null);
     if (user && activeTab === 'inquiries') {
       const q = query(collection(db, 'inquiries'), orderBy('createdAt', 'desc'));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setInquiries(data);
       }, (error) => {
-        handleFirestoreError(error, OperationType.LIST, 'inquiries');
+        const msg = handleFirestoreError(error, OperationType.LIST, 'inquiries');
+        if (msg.includes('Missing or insufficient permissions')) {
+          setDataError('Permission Denied: Your account is not authorized as an Admin. Please ensure you logged in with rayansportsofficial@gmail.com.');
+        } else {
+          setDataError(msg);
+        }
       });
       return () => unsubscribe();
     } else if (user && activeTab === 'slideshow') {
@@ -70,7 +78,8 @@ export default function AdminDashboard() {
         const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setSlides(data);
       }, (error) => {
-        handleFirestoreError(error, OperationType.LIST, 'slideshow');
+        const msg = handleFirestoreError(error, OperationType.LIST, 'slideshow');
+        setDataError(msg);
       });
       return () => unsubscribe();
     }
@@ -81,23 +90,23 @@ export default function AdminDashboard() {
   const handleLogin = async () => {
     try {
       setLoginError(null);
-      const auth = getAuth();
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
     } catch (error: any) {
       console.error(error);
       if (error.code === 'auth/popup-closed-by-user') {
         setLoginError('Login popup closed. Please try again.');
-      } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('cross-origin')) {
-        setLoginError('Authentication might be blocked inside an iframe. Please open the application in a new tab (using the button in the top right), and try tracking again.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setLoginError(`Domain not authorized. Please go to your Firebase Console -> Authentication -> Settings -> Authorized Domains, and add this URL's domain (${window.location.hostname}) to the list.`);
+      } else if (error.message?.includes('cross-origin')) {
+        setLoginError('Authentication might be blocked inside an iframe. Please open the application in a new tab (using the button in the top right), and try again.');
       } else {
-        setLoginError(error.message || 'Login failed. If you are in the AI Studio preview, please open the app in a new tab to login.');
+        setLoginError(error.message || 'Login failed. Try opening the app in a new tab.');
       }
     }
   };
 
   const handleLogout = async () => {
-    const auth = getAuth();
     await signOut(auth);
   };
 
@@ -181,7 +190,7 @@ export default function AdminDashboard() {
           </button>
           
           <div className="mt-6 text-sm text-amber-700 bg-amber-50 p-4 rounded-lg text-left border border-amber-200">
-            <strong>Note:</strong> If you are using the AI Studio preview window, the Google Login popup might be blocked by your browser depending on iframe settings. If the login doesn't work, please click the <strong>"Open in new tab"</strong> icon at the top right of the preview window and try again.
+            <strong>Note:</strong> If you are using the AI Studio preview window, the Google Login popup might be blocked by your browser depending on iframe settings. If the login doesn&apos;t work, please click the <strong>&quot;Open in new tab&quot;</strong> icon at the top right of the preview window and try again.
           </div>
 
           {loginError && (
@@ -225,6 +234,13 @@ export default function AdminDashboard() {
             Slideshow CMS
           </button>
         </div>
+
+        {dataError && (
+          <div className="mb-6 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl text-left shadow-sm">
+            <strong className="font-bold uppercase tracking-widest text-[10px] block mb-1">Error Loading Data</strong>
+            {dataError}
+          </div>
+        )}
 
         {activeTab === 'inquiries' && (
           <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-200">
