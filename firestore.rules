@@ -49,6 +49,25 @@ service cloud.firestore {
       return incoming().diff(existing()).affectedKeys().hasOnly(['status']);
     }
 
+    function isValidSlide(data) {
+      return data.keys().hasAll(['image', 'title', 'subtitle', 'buttonText', 'buttonLink', 'enabled', 'order'])
+        && data.image is string && data.image.size() <= 1000
+        && data.title is string && data.title.size() <= 200
+        && data.subtitle is string && data.subtitle.size() <= 500
+        && data.buttonText is string && data.buttonText.size() <= 50
+        && data.buttonLink is string && data.buttonLink.size() <= 200
+        && data.enabled is bool
+        && data.order is number;
+    }
+
+    // Slideshow Collection
+    match /slideshow/{slideId} {
+      allow read: if true;
+      allow create: if isValidId(slideId) && isAdmin() && isValidSlide(incoming());
+      allow update: if isValidId(slideId) && isAdmin() && isValidSlide(incoming());
+      allow delete: if isValidId(slideId) && isAdmin();
+    }
+
     // Inquiries Collection
     match /inquiries/{inquiryId} {
       allow get: if isAdmin();

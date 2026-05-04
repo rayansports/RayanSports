@@ -129,6 +129,41 @@ export default async function ProductPage({ params }: { params: Promise<{ catego
           </div>
         </div>
       </div>
+
+      {/* Articles / Variations Section */}
+      {product.articles && product.articles.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24 mb-12 border-t border-slate-200 pt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-sm font-black text-brand-blue uppercase tracking-widest mb-2 border-b border-brand-blue inline-block pb-1">Our Collection</h2>
+            <h3 className="text-3xl sm:text-4xl font-black text-slate-900 uppercase tracking-tighter">Featured {product.name} Articles</h3>
+            <p className="mt-4 max-w-2xl mx-auto text-sm text-slate-500 font-medium">Browse our latest specific design articles. Quote an article number for reference in your inquiry.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {product.articles.map((article) => (
+              <div key={article.articleNumber} className="group flex flex-col border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all">
+                <div className="relative aspect-[4/5] bg-slate-100 overflow-hidden border-b border-slate-200 p-4 flex items-center justify-center">
+                  {/* Using standard object-contain to preserve the image shapes from uploaded files */}
+                  <Image
+                    src={article.image}
+                    alt={article.name}
+                    fill
+                    className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute top-2 right-2 bg-white px-2 py-1 text-[10px] font-bold text-slate-900 uppercase tracking-widest border border-slate-200 z-10 shadow-sm">
+                    {article.articleNumber}
+                  </div>
+                </div>
+                <div className="p-5 flex flex-col flex-1">
+                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight mb-1">{article.name}</h4>
+                  <p className="text-xs text-slate-500 font-medium mt-auto">Color: {article.color}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

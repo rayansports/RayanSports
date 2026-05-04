@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Metadata } from 'next';
 import { getCategories } from '@/lib/catalog';
+import HomepageSlider from '@/components/HomepageSlider';
 
 export const metadata: Metadata = {
   title: 'RayanSports - Premium Custom Sportswear Manufacturer & Exporter',
@@ -13,35 +14,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen text-slate-900 font-sans">
-      {/* Hero Section */}
-      <section className="bg-slate-50 border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-24">
-          <div className="max-w-2xl">
-            <div className="inline-block px-3 py-1 bg-blue-100 text-brand-blue text-[10px] font-bold uppercase tracking-widest mb-4">Established 1998 • Sialkot, Pakistan</div>
-            <h1 className="text-5xl lg:text-7xl font-black text-slate-900 leading-tight mb-4 tracking-tight">
-              Premium Custom <br/>
-              <span className="text-brand-blue">Sportswear</span> Manufacturer
-            </h1>
-            <p className="text-slate-500 max-w-lg mb-10 text-sm leading-relaxed">
-              Global OEM & Private Label manufacturing partner. Delivering export-quality team uniforms, fitness gear, and custom apparel to brands worldwide.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <Link href="/products" className="px-8 py-4 bg-brand-blue text-white font-bold uppercase tracking-widest text-xs hover:brightness-110 transition-all rounded-none inline-flex">
-                View Catalog
-              </Link>
-              <div className="flex items-center gap-3 ml-0 sm:ml-4 mt-4 sm:mt-0">
-                <div className="w-10 h-10 rounded-full border border-slate-300 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-brand-blue" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"></path></svg>
-                </div>
-                <span className="text-xs font-bold uppercase tracking-tighter text-slate-600">Tour Facility</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <HomepageSlider />
+      
       {/* Categories Preview */}
       <section className="py-16 bg-white border-b border-slate-200">
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
             <h2 className="text-xs font-black uppercase tracking-widest border-l-4 border-brand-blue pl-3">Product Categories</h2>
