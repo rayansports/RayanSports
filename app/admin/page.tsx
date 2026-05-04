@@ -76,14 +76,23 @@ export default function AdminDashboard() {
     }
   }, [user, activeTab]);
 
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const handleLogin = async () => {
     try {
+      setLoginError(null);
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Login failed');
+      if (error.code === 'auth/popup-closed-by-user') {
+        setLoginError('Login popup closed. Please try again.');
+      } else if (error.code === 'auth/unauthorized-domain' || error.message?.includes('cross-origin')) {
+        setLoginError('Authentication might be blocked inside an iframe. Please open the application in a new tab (using the button in the top right), and try tracking again.');
+      } else {
+        setLoginError(error.message || 'Login failed. If you are in the AI Studio preview, please open the app in a new tab to login.');
+      }
     }
   };
 
@@ -170,6 +179,16 @@ export default function AdminDashboard() {
             </svg>
             Sign in with Google
           </button>
+          
+          <div className="mt-6 text-sm text-amber-700 bg-amber-50 p-4 rounded-lg text-left border border-amber-200">
+            <strong>Note:</strong> If you are using the AI Studio preview window, the Google Login popup might be blocked by your browser depending on iframe settings. If the login doesn't work, please click the <strong>"Open in new tab"</strong> icon at the top right of the preview window and try again.
+          </div>
+
+          {loginError && (
+            <div className="mt-4 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg text-left">
+              {loginError}
+            </div>
+          )}
         </div>
       </div>
     );
