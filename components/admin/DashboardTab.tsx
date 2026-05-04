@@ -6,23 +6,39 @@ import { db } from '@/lib/firebase';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
-import { Activity, MessageSquare, PlusCircle } from 'lucide-react';
+import { Activity, MessageSquare, PlusCircle, Package, Layers } from 'lucide-react';
 
 export default function DashboardTab() {
   const [inquiries, setInquiries] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, 'inquiries'), orderBy('createdAt', 'asc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setInquiries(data);
+    const qInq = query(collection(db, 'inquiries'), orderBy('createdAt', 'asc'));
+    const unSubInq = onSnapshot(qInq, (snapshot) => {
+      setInquiries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     }, (error) => {
       console.error(error);
       setLoading(false);
     });
-    return () => unsubscribe();
+
+    const qProducts = query(collection(db, 'products'));
+    const unSubProd = onSnapshot(qProducts, (snapshot) => {
+      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    const qCategories = query(collection(db, 'categories'));
+    const unSubCat = onSnapshot(qCategories, (snapshot) => {
+      setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
+    return () => {
+      unSubInq();
+      unSubProd();
+      unSubCat();
+    };
   }, []);
 
   const newInquiries = inquiries.filter(i => i.status === 'new').length;
@@ -56,7 +72,7 @@ export default function DashboardTab() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
             <MessageSquare className="w-32 h-32" />
@@ -85,14 +101,27 @@ export default function DashboardTab() {
 
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
-            <Activity className="w-32 h-32" />
+            <Package className="w-32 h-32" />
           </div>
           <div className="relative z-10">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              Contacted
+              <span className="w-2 h-2 rounded-full bg-indigo-400"></span>
+              Total Products
             </h3>
-            <div className="text-5xl font-black text-emerald-600">{contactedInquiries}</div>
+            <div className="text-5xl font-black text-indigo-600">{products.length}</div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
+          <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
+            <Layers className="w-32 h-32" />
+          </div>
+          <div className="relative z-10">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-2 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+              Categories
+            </h3>
+            <div className="text-5xl font-black text-purple-600">{categories.length}</div>
           </div>
         </div>
       </div>
@@ -141,21 +170,23 @@ export default function DashboardTab() {
           
           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
             {inquiries.slice(-5).reverse().map((inquiry, i) => (
-              <div key={inquiry.id || i} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0">
-                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div key={inquiry.id || i} className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 p-2 rounded-xl transition-colors cursor-default">
+                <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                   <span className="text-xs font-black text-brand-blue">{(inquiry.name || 'U')[0].toUpperCase()}</span>
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-800 line-clamp-1">{inquiry.name} <span className="font-normal text-slate-500">submitted an inquiry</span></p>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">{inquiry.productName}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">
+                  <p className="text-xs font-medium text-brand-blue mt-0.5 max-w-[200px] truncate">{inquiry.productName}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2 flex items-center gap-1">
+                    <Activity className="w-3 h-3" />
                     {inquiry.createdAt?.toDate ? inquiry.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent'}
                   </p>
                 </div>
               </div>
             ))}
             {inquiries.length === 0 && (
-              <div className="text-center py-10 text-sm text-slate-500">
+              <div className="text-center py-12 text-sm text-slate-500 flex flex-col items-center gap-3">
+                <Activity className="w-8 h-8 text-slate-300" />
                 No recent activity recorded.
               </div>
             )}

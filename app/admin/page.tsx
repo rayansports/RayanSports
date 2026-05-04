@@ -95,9 +95,14 @@ export default function AdminDashboard() {
       case 'products': return <ProductsTab />;
       case 'settings': return <SettingsTab />;
       default: return (
-        <div className="bg-white p-12 text-center rounded-xl border border-slate-200 shadow-sm">
-          <h2 className="text-base font-black tracking-widest uppercase text-slate-800 mb-2">Coming Soon</h2>
-          <p className="text-slate-500 font-medium text-sm">This feature is currently under development.</p>
+        <div className="bg-white p-16 text-center rounded-2xl border border-slate-200 shadow-sm animate-in fade-in flex flex-col items-center justify-center max-w-2xl mx-auto mt-10">
+          <div className="w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-6">
+            <svg className="w-8 h-8 text-brand-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-black tracking-widest uppercase text-slate-800 mb-2">Under Construction</h2>
+          <p className="text-slate-500 font-medium text-sm max-w-md">The {activeTab} module is currently being built and will be available in the next system update.</p>
         </div>
       );
     }

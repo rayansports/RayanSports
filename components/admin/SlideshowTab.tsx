@@ -60,14 +60,14 @@ export default function SlideshowTab() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-1 border border-slate-200 bg-white rounded-xl shadow-sm p-6 max-h-screen overflow-y-auto sticky top-6">
-        <h2 className="text-base font-black uppercase tracking-widest text-slate-900 border-b border-slate-100 pb-4 mb-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+      <div className="lg:col-span-1 border border-slate-200 bg-white rounded-2xl shadow-sm p-6 lg:p-8 max-h-[calc(100vh-8rem)] overflow-y-auto sticky top-6">
+        <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 border-b border-slate-100 pb-4 mb-6">
           {editingSlideId ? 'Edit Slide' : 'Add New Slide'}
         </h2>
         
         {dataError && (
-          <div className="mb-6 p-4 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg text-left shadow-sm">
+          <div className="mb-6 p-4 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl text-left shadow-sm">
             <strong className="font-bold uppercase tracking-widest text-[10px] block mb-1">Error Loading Data</strong>
             {dataError}
           </div>

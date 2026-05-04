@@ -60,6 +60,64 @@ service cloud.firestore {
         && data.order is number;
     }
 
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'slug', 'image', 'description', 'createdAt'])
+        && data.name is string && data.name.size() <= 100
+        && data.slug is string && data.slug.size() <= 100 && data.slug.matches('^[a-z0-9-]+$')
+        && data.image is string && data.image.size() <= 1000
+        && data.description is string && data.description.size() <= 2000
+        && data.createdAt == request.time;
+    }
+
+    function isValidCategoryUpdate(incomingData, existingData) {
+      return incomingData.keys().hasAll(['name', 'slug', 'image', 'description', 'createdAt'])
+        && incomingData.name is string && incomingData.name.size() <= 100
+        && incomingData.slug is string && incomingData.slug.size() <= 100 && incomingData.slug.matches('^[a-z0-9-]+$')
+        && incomingData.image is string && incomingData.image.size() <= 1000
+        && incomingData.description is string && incomingData.description.size() <= 2000
+        && incomingData.createdAt == existingData.createdAt;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll(['categoryId', 'name', 'slug', 'image', 'description', 'features', 'createdAt'])
+        && data.categoryId is string && data.categoryId.size() <= 128
+        && data.name is string && data.name.size() <= 200
+        && data.slug is string && data.slug.size() <= 200 && data.slug.matches('^[a-z0-9-]+$')
+        && data.image is string && data.image.size() <= 1000
+        && data.description is string && data.description.size() <= 10000
+        && data.features is list && data.features.size() <= 20
+        && (data.features.size() == 0 || data.features[0] is string)
+        && data.createdAt == request.time;
+    }
+
+    function isValidProductUpdate(incomingData, existingData) {
+      return incomingData.keys().hasAll(['categoryId', 'name', 'slug', 'image', 'description', 'features', 'createdAt'])
+        && incomingData.categoryId is string && incomingData.categoryId.size() <= 128
+        && incomingData.name is string && incomingData.name.size() <= 200
+        && incomingData.slug is string && incomingData.slug.size() <= 200 && incomingData.slug.matches('^[a-z0-9-]+$')
+        && incomingData.image is string && incomingData.image.size() <= 1000
+        && incomingData.description is string && incomingData.description.size() <= 10000
+        && incomingData.features is list && incomingData.features.size() <= 20
+        && (incomingData.features.size() == 0 || incomingData.features[0] is string)
+        && incomingData.createdAt == existingData.createdAt;
+    }
+
+    // Categories Collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isValidId(categoryId) && isAdmin() && isValidCategory(incoming());
+      allow update: if isValidId(categoryId) && isAdmin() && isValidCategoryUpdate(incoming(), existing());
+      allow delete: if isValidId(categoryId) && isAdmin();
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isValidId(productId) && isAdmin() && isValidProduct(incoming());
+      allow update: if isValidId(productId) && isAdmin() && isValidProductUpdate(incoming(), existing());
+      allow delete: if isValidId(productId) && isAdmin();
+    }
+
     // Slideshow Collection
     match /slideshow/{slideId} {
       allow read: if true;
@@ -82,6 +140,22 @@ service cloud.firestore {
                     && incoming().status in ['new', 'contacted'];
       
       allow delete: if isValidId(inquiryId) && isAdmin();
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll(['companyName', 'contactWhatsapp', 'contactEmail', 'footerAddress'])
+        && data.companyName is string && data.companyName.size() <= 100
+        && data.contactWhatsapp is string && data.contactWhatsapp.size() <= 20
+        && data.contactEmail is string && data.contactEmail.size() <= 100
+        && data.footerAddress is string && data.footerAddress.size() <= 200;
+    }
+
+    // Settings Collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow create: if isValidId(settingId) && isAdmin() && isValidSettings(incoming());
+      allow update: if isValidId(settingId) && isAdmin() && isValidSettings(incoming());
+      allow delete: if false;
     }
 
     // Admins Collection
