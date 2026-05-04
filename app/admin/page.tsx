@@ -10,6 +10,7 @@ import SlideshowTab from '@/components/admin/SlideshowTab';
 import ProductsTab from '@/components/admin/ProductsTab';
 import SettingsTab from '@/components/admin/SettingsTab';
 import UsersTab from '@/components/admin/UsersTab';
+import OrdersTab from '@/components/admin/OrdersTab';
 import { Menu } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -92,6 +93,7 @@ export default function AdminDashboard() {
     switch(activeTab) {
       case 'dashboard': return <DashboardTab />;
       case 'inquiries': return <InquiriesTab />;
+      case 'orders': return <OrdersTab />;
       case 'slideshow': return <SlideshowTab />;
       case 'products': return <ProductsTab />;
       case 'settings': return <SettingsTab />;

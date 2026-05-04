@@ -132,6 +132,26 @@ service cloud.firestore {
       allow delete: if isValidId(slideId) && isAdmin();
     }
 
+    function isValidOrder(data) {
+      return data.keys().hasAll(['orderNumber', 'customerName', 'customerEmail', 'items', 'totalAmount', 'status', 'createdAt'])
+        && data.orderNumber is string
+        && data.customerName is string && data.customerName.size() <= 100
+        && data.customerEmail is string && data.customerEmail.size() <= 100
+        && data.items is list
+        && data.totalAmount is number
+        && data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+        && data.createdAt == request.time;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow update: if isValidId(orderId) && isAdmin() 
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'trackingNumber', 'updatedAt'])
+        && incoming().status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      allow delete: if isValidId(orderId) && isAdmin();
+    }
+
     // Inquiries Collection
     match /inquiries/{inquiryId} {
       allow get: if isAdmin();
@@ -153,7 +173,8 @@ service cloud.firestore {
         && data.companyName is string && data.companyName.size() <= 100
         && data.contactWhatsapp is string && data.contactWhatsapp.size() <= 20
         && data.contactEmail is string && data.contactEmail.size() <= 100
-        && data.footerAddress is string && data.footerAddress.size() <= 200;
+        && data.footerAddress is string && data.footerAddress.size() <= 200
+        && (string.length(data.get('logoUrl', '')) <= 1000);
     }
 
     // Settings Collection

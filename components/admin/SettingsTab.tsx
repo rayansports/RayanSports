@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
-import { Check, Settings, Mail, ShieldCheck } from 'lucide-react';
+import { Check, Settings, Mail, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import MediaUploader from './MediaUploader';
 
 export default function SettingsTab() {
   const [loading, setLoading] = useState(true);
@@ -15,7 +16,8 @@ export default function SettingsTab() {
     companyName: 'RAYAN SPORTS',
     contactWhatsapp: '923000000000',
     contactEmail: 'rayansportsofficial@gmail.com',
-    footerAddress: 'Sialkot, Pakistan'
+    footerAddress: 'Sialkot, Pakistan',
+    logoUrl: ''
   });
 
   useEffect(() => {
@@ -79,6 +81,20 @@ export default function SettingsTab() {
         
         <form onSubmit={handleSubmit} className="p-6 lg:p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="md:col-span-2">
+              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Company Logo</label>
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                {formData.logoUrl && (
+                  <div className="w-32 h-32 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center p-4 flex-shrink-0">
+                    <img src={formData.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                  </div>
+                )}
+                <div className="flex-1 w-full">
+                  <MediaUploader accept="image/*" label="Upload Primary Logo" onUploadSuccess={(url) => setFormData({...formData, logoUrl: url})} />
+                  <p className="text-[10px] text-slate-400 mt-2 font-medium">Recommended size: 512x512px. Formats: PNG, SVG, JPG.</p>
+                </div>
+              </div>
+            </div>
             <div>
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Company Name</label>
               <input required type="text" name="companyName" value={formData.companyName} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" />

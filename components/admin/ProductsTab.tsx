@@ -5,6 +5,7 @@ import { collection, query, onSnapshot, doc, setDoc, deleteDoc, orderBy, serverT
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
 import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search } from 'lucide-react';
+import MediaUploader from './MediaUploader';
 
 export default function ProductsTab() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -240,9 +241,19 @@ export default function ProductsTab() {
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">URL Slug</label>
                     <input type="text" value={categoryForm.slug} onChange={e => setCategoryForm({...categoryForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="american-football (auto-generated)" />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Image URL</label>
-                    <input required type="url" value={categoryForm.image} onChange={e => setCategoryForm({...categoryForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all" placeholder="https://..." />
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <input required type="url" value={categoryForm.image} onChange={e => setCategoryForm({...categoryForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all mb-3" placeholder="https://..." />
+                        <MediaUploader accept="image/*" label="Upload Image" onUploadSuccess={(url) => setCategoryForm({...categoryForm, image: url})} />
+                      </div>
+                      {categoryForm.image && (
+                        <div className="w-32 h-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50">
+                          <img src={categoryForm.image} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Description</label>
@@ -272,13 +283,33 @@ export default function ProductsTab() {
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">URL Slug</label>
                     <input type="text" value={productForm.slug} onChange={e => setProductForm({...productForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="pro-team-jersey" />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Primary Image URL</label>
-                    <input required type="url" value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="https://..." />
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <input required type="url" value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all mb-3" placeholder="https://..." />
+                        <MediaUploader accept="image/*" label="Upload Primary Image" onUploadSuccess={(url) => setProductForm({...productForm, image: url})} />
+                      </div>
+                      {productForm.image && (
+                        <div className="w-32 h-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50">
+                          <img src={productForm.image} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Video URL (Optional)</label>
-                    <input type="url" value={productForm.videoUrl} onChange={e => setProductForm({...productForm, videoUrl: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="YouTube or video link..." />
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <input type="url" value={productForm.videoUrl} onChange={e => setProductForm({...productForm, videoUrl: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all mb-3" placeholder="YouTube or video link..." />
+                        <MediaUploader accept="video/*" label="Upload Video" onUploadSuccess={(url) => setProductForm({...productForm, videoUrl: url})} />
+                      </div>
+                      {productForm.videoUrl && (
+                        <div className="w-32 h-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50 flex items-center justify-center text-slate-400">
+                          <div className="text-center text-[10px] font-bold p-2 break-all line-clamp-3">Video Added</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Description</label>
@@ -291,21 +322,31 @@ export default function ProductsTab() {
                       <span>Additional Media Gallery Images</span>
                       <button type="button" onClick={addMedia} className="text-brand-blue hover:text-blue-800 flex items-center gap-1">+ Add</button>
                     </label>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {productForm.mediaUrls.map((media, idx) => (
-                        <div key={idx} className="flex gap-2 relative group">
-                          <ImageIcon className="absolute left-3 top-3 w-4 h-4 text-slate-300" />
-                          <input 
-                            type="url" 
-                            value={media} 
-                            onChange={e => handleMediaChange(idx, e.target.value)} 
-                            className="w-full border border-slate-300 rounded-lg py-2.5 pr-10 pl-9 text-sm focus:ring-1 focus:ring-brand-blue outline-none transition-all" 
-                            placeholder="https://... secondary image/video" 
-                          />
-                          {productForm.mediaUrls.length > 1 && (
-                            <button type="button" onClick={() => removeMedia(idx)} className="absolute right-2 top-2 p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                        <div key={idx} className="flex gap-3 relative group">
+                          <div className="flex-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative">
+                            {productForm.mediaUrls.length > 1 && (
+                              <button type="button" onClick={() => removeMedia(idx)} className="absolute right-2 top-2 p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded z-10 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <div className="relative mb-3">
+                              <ImageIcon className="absolute left-3 top-3 w-4 h-4 text-slate-300" />
+                              <input 
+                                type="url" 
+                                value={media} 
+                                onChange={e => handleMediaChange(idx, e.target.value)} 
+                                className="w-full border border-slate-300 rounded-lg py-2.5 pr-10 pl-9 text-sm focus:ring-1 focus:ring-brand-blue outline-none transition-all" 
+                                placeholder="https://... secondary image/video" 
+                              />
+                            </div>
+                            <MediaUploader label="Upload Media" onUploadSuccess={(url) => handleMediaChange(idx, url)} />
+                          </div>
+                          {media && (
+                            <div className="w-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50 h-auto">
+                              <img src={media} alt="Thumb" className="w-full h-full object-cover" />
+                            </div>
                           )}
                         </div>
                       ))}
