@@ -62,7 +62,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpe
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 bg-slate-900 text-white w-72 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex-shrink-0 shadow-2xl lg:shadow-none`}>
+      <aside className={`fixed inset-y-0 left-0 bg-slate-900 text-white w-72 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex-shrink-0 shadow-2xl lg:shadow-none print:hidden`}>
         <div className="h-20 flex items-center justify-between px-8 border-b border-white/5 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-brand-blue/20 to-transparent pointer-events-none"></div>
           <span className="text-xl font-black tracking-widest text-white uppercase relative z-10">RAYAN <span className="text-brand-blue font-bold">SPORT</span></span>

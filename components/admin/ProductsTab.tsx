@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, setDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { handleFirestoreError, OperationType } from '@/app/admin/utils';
-import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search } from 'lucide-react';
+import { handleFirestoreError, OperationType, exportToCSV } from '@/app/admin/utils';
+import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search, Download } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 import Dropdown from './Dropdown';
 
@@ -457,15 +457,33 @@ export default function ProductsTab() {
             <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">
               {selectedCategory === 'all' ? 'All Products' : categories.find(c => c.id === selectedCategory)?.name}
             </h3>
-            <div className="relative w-full sm:w-64">
-              <input 
-                type="text" 
-                placeholder="Search products..." 
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow bg-white" 
-              />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={() => {
+                  const exportData = filteredProducts.map(p => ({
+                    ProductID: p.id,
+                    Name: p.name,
+                    Category: categories.find(c => c.id === p.categoryId)?.name || 'Uncategorized',
+                    Description: p.description,
+                    Features: (p.features || []).join('; ')
+                  }));
+                  exportToCSV(exportData, `products-${Date.now()}.csv`);
+                }}
+                className="w-full sm:w-auto px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Export CSV
+              </button>
+              <div className="relative w-full sm:w-64">
+                <input 
+                  type="text" 
+                  placeholder="Search products..." 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow bg-white" 
+                />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              </div>
             </div>
           </div>
 

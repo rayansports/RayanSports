@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { handleFirestoreError, OperationType } from '@/app/admin/utils';
-import { Search, Filter } from 'lucide-react';
+import { handleFirestoreError, OperationType, exportToCSV } from '@/app/admin/utils';
+import { Search, Filter, Download } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function InquiriesTab() {
   const [inquiries, setInquiries] = useState<any[]>([]);
@@ -108,6 +109,26 @@ export default function InquiriesTab() {
               Contacted
             </button>
           </div>
+          <button
+            onClick={() => {
+              const exportData = filteredInquiries.map(i => ({
+                ID: i.id,
+                Name: i.name,
+                Email: i.email,
+                Phone: i.phone,
+                ProductName: i.productName,
+                Quantity: i.quantity,
+                Requirements: i.requirements,
+                Status: i.status,
+                Date: i.createdAt?.toDate ? format(i.createdAt.toDate(), 'yyyy-MM-dd HH:mm:ss') : ''
+              }));
+              exportToCSV(exportData, `inquiries-${Date.now()}.csv`);
+            }}
+            className="px-4 py-2 bg-slate-900 border border-slate-900 text-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50 hover:bg-slate-800 transition-all font-bold uppercase tracking-wider text-[10px] flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export CSV
+          </button>
         </div>
       </div>
 
