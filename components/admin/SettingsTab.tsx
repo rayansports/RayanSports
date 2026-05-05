@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
-import { Check, Settings, Mail, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { Check, Settings, Mail, ShieldCheck, Image as ImageIcon, ToggleLeft, ToggleRight } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 
 export default function SettingsTab() {
@@ -17,7 +17,8 @@ export default function SettingsTab() {
     contactWhatsapp: '923000000000',
     contactEmail: 'rayansportsofficial@gmail.com',
     footerAddress: 'Sialkot, Pakistan',
-    logoUrl: ''
+    logoUrl: '',
+    maintenanceMode: false
   });
 
   useEffect(() => {
@@ -113,6 +114,21 @@ export default function SettingsTab() {
             <div className="md:col-span-2">
               <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Footer Address</label>
               <textarea required name="footerAddress" value={formData.footerAddress} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" rows={3}></textarea>
+            </div>
+            
+            {/* Maintenance Mode Toggle */}
+            <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Maintenance Mode</h3>
+                <p className="text-xs text-slate-500 mt-1">When enabled, the storefront will display a maintenance page to visitors.</p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setFormData({ ...formData, maintenanceMode: !formData.maintenanceMode })}
+                className={`flex items-center justify-center p-1 rounded-full transition-colors w-12 h-6 ${formData.maintenanceMode ? 'bg-brand-blue' : 'bg-slate-300'}`}
+              >
+                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${formData.maintenanceMode ? 'translate-x-3' : '-translate-x-3'}`}></div>
+              </button>
             </div>
           </div>
           

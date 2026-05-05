@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
+import MediaUploader from './MediaUploader';
 
 export default function SlideshowTab() {
   const [slides, setSlides] = useState<any[]>([]);
@@ -76,7 +77,17 @@ export default function SlideshowTab() {
         <form onSubmit={saveSlide} className="space-y-5">
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Image URL</label>
-            <input required type="url" value={slideForm.image} onChange={e => setSlideForm({...slideForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" placeholder="https://..." />
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <input required type="url" value={slideForm.image} onChange={e => setSlideForm({...slideForm, image: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all mb-3" placeholder="https://..." />
+                <MediaUploader accept="image/*" label="Upload Image" onUploadSuccess={(url) => setSlideForm({...slideForm, image: url})} />
+              </div>
+              {slideForm.image && (
+                <div className="w-32 h-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50">
+                  <img src={slideForm.image} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Title</label>
@@ -102,8 +113,14 @@ export default function SlideshowTab() {
               <input required type="number" value={slideForm.order} onChange={e => setSlideForm({...slideForm, order: Number(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all" />
             </div>
             <div className="flex items-center space-x-3 pt-5">
-              <input type="checkbox" id="enabled" checked={slideForm.enabled} onChange={e => setSlideForm({...slideForm, enabled: e.target.checked})} className="w-5 h-5 text-brand-blue focus:ring-brand-blue border-slate-300 rounded" />
-              <label htmlFor="enabled" className="text-[10px] font-black uppercase tracking-widest text-slate-900 cursor-pointer">Enabled</label>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enabled</span>
+              <button 
+                type="button"
+                onClick={() => setSlideForm({...slideForm, enabled: !slideForm.enabled})}
+                className={`flex items-center justify-center p-1 rounded-full transition-colors w-12 h-6 ${slideForm.enabled ? 'bg-brand-blue' : 'bg-slate-300'}`}
+              >
+                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${slideForm.enabled ? 'translate-x-3' : '-translate-x-3'}`}></div>
+              </button>
             </div>
           </div>
           <div className="pt-6 flex gap-3">

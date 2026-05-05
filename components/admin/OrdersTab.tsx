@@ -1,18 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
-import { ShoppingCart, Package, Eye, Trash2, Search, X, Check, Clock, Truck, FileText } from 'lucide-react';
+import { ShoppingCart, Package, Eye, Trash2, Search, X, Check, Clock, Truck, FileText, ChevronDown } from 'lucide-react';
 
 export default function OrdersTab() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
@@ -105,18 +117,54 @@ export default function OrdersTab() {
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:bg-white transition-all"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:bg-white transition-all font-bold text-slate-700 uppercase tracking-wider text-[10px]"
-          >
-            <option value="all">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-full sm:w-auto min-w-[140px] px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:bg-white transition-all font-bold text-slate-700 uppercase tracking-wider text-[10px] flex items-center justify-between"
+            >
+              {statusFilter === 'all' ? 'All Orders' : statusFilter}
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 ml-2" />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-2">
+                {[
+                  { value: 'all', label: 'All Orders' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'processing', label: 'Processing' },
+                  { value: 'shipped', label: 'Shipped' },
+                  { value: 'delivered', label: 'Delivered' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setStatusFilter(opt.value); setDropdownOpen(false); }}
+                    className={`block w-full text-left px-4 py-2 text-[10px] font-bold uppercase tracking-widest ${statusFilter === opt.value ? 'bg-blue-50 text-brand-blue' : 'text-slate-600 hover:bg-slate-50'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="text-2xl font-black text-slate-900">{orders.length}</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Total Orders</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-brand-blue/30 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="text-2xl font-black text-brand-blue">{orders.filter(o => o.status === 'pending').length}</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-brand-blue/70 mt-1">Pending</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="text-2xl font-black text-emerald-600">{orders.filter(o => o.status === 'delivered').length}</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-emerald-500/80 mt-1">Delivered</div>
+        </div>
+        <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 shadow-sm flex flex-col items-center justify-center text-center">
+          <div className="text-2xl font-black text-emerald-700">${orders.reduce((acc, o) => acc + (o.totalAmount || 0), 0).toFixed(2)}</div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600/80 mt-1">Total Revenue</div>
         </div>
       </div>
 

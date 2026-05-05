@@ -14,6 +14,8 @@ interface MediaUploaderProps {
 export default function MediaUploader({ onUploadSuccess, accept = "image/*,video/*", label = "Upload Media" }: MediaUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [transferred, setTransferred] = useState('0 MB');
+  const [total, setTotal] = useState('0 MB');
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -23,6 +25,8 @@ export default function MediaUploader({ onUploadSuccess, accept = "image/*,video
 
     setUploading(true);
     setProgress(0);
+    setTransferred('0 MB');
+    setTotal((file.size / (1024 * 1024)).toFixed(2) + ' MB');
     setError(null);
 
     const isVideo = file.type.startsWith('video/');
@@ -35,6 +39,7 @@ export default function MediaUploader({ onUploadSuccess, accept = "image/*,video
       (snapshot) => {
         const prog = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setProgress(prog);
+        setTransferred((snapshot.bytesTransferred / (1024 * 1024)).toFixed(2) + ' MB');
       },
       (err) => {
         console.error("Upload error:", err);
@@ -83,6 +88,10 @@ export default function MediaUploader({ onUploadSuccess, accept = "image/*,video
             <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
               <div className="bg-brand-blue h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
             </div>
+            <div className="text-center mt-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+              {transferred} / {total}
+            </div>
+            <div className="text-center mt-1 text-[9px] text-slate-400 font-medium tracking-wide">Please wait, do not close this window.</div>
           </div>
         </div>
       )}

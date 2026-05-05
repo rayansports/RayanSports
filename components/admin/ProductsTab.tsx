@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
 import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search } from 'lucide-react';
 import MediaUploader from './MediaUploader';
+import Dropdown from './Dropdown';
 
 export default function ProductsTab() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -112,6 +113,11 @@ export default function ProductsTab() {
 
   const saveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!productForm.categoryId) {
+      alert("Please select a category");
+      return;
+    }
+    
     try {
       const id = editingId || `prod-${Date.now()}`;
       const payload: any = {
@@ -228,10 +234,14 @@ export default function ProductsTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Parent Category (Optional)</label>
-                    <select value={categoryForm.parentId} onChange={e => setCategoryForm({...categoryForm, parentId: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all bg-white">
-                      <option value="">None (Main Category)</option>
-                      {categories.filter(c => !editingId || c.id !== editingId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <Dropdown
+                      value={categoryForm.parentId}
+                      onChange={(value) => setCategoryForm({...categoryForm, parentId: value})}
+                      options={[
+                        { label: 'None (Main Category)', value: '' },
+                        ...categories.filter(c => !editingId || c.id !== editingId).map(c => ({ label: c.name, value: c.id }))
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Category Name</label>
@@ -270,10 +280,15 @@ export default function ProductsTab() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Category</label>
-                    <select required value={productForm.categoryId} onChange={e => setProductForm({...productForm, categoryId: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all bg-white">
-                      <option value="">Select a category</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    <Dropdown
+                      value={productForm.categoryId}
+                      onChange={(value) => setProductForm({...productForm, categoryId: value})}
+                      options={[
+                        { label: 'Select a category', value: '' },
+                        ...categories.map(c => ({ label: c.name, value: c.id }))
+                      ]}
+                      className="w-full"
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Product Name</label>

@@ -6,6 +6,8 @@ import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
 import { Plus, Edit2, Trash2, X, Check, ShieldCheck, Mail, Users, UserPlus } from 'lucide-react';
 
+import Dropdown from './Dropdown';
+
 export default function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
@@ -131,19 +133,16 @@ export default function UsersTab() {
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Role Assignment</label>
-                <select required value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all bg-white">
-                  {formType === 'admin' ? (
-                    <>
-                      <option value="admin">Super Administrator</option>
-                      <option value="manager">Store Manager</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="editor">Content Editor</option>
-                      <option value="viewer">Viewer (Read Only)</option>
-                    </>
-                  )}
-                </select>
+                <Dropdown
+                  value={formData.role}
+                  onChange={(value) => setFormData({...formData, role: value})}
+                  options={
+                    formType === 'admin' 
+                      ? [{label: "Super Administrator", value: "admin"}, {label: "Store Manager", value: "manager"}]
+                      : [{label: "Content Editor", value: "editor"}, {label: "Viewer (Read Only)", value: "viewer"}]
+                  }
+                  className="w-full"
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
