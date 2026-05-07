@@ -18,7 +18,10 @@ export default function SettingsTab() {
     contactEmail: 'rayansportsofficial@gmail.com',
     footerAddress: 'Sialkot, Pakistan',
     logoUrl: '',
-    maintenanceMode: false
+    maintenanceMode: false,
+    seoTitle: 'Rayan Sports',
+    seoDescription: 'High quality sports wear',
+    seoKeywords: 'sports, wear, custom'
   });
 
   useEffect(() => {
@@ -129,6 +132,24 @@ export default function SettingsTab() {
               >
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${formData.maintenanceMode ? 'translate-x-3' : '-translate-x-3'}`}></div>
               </button>
+            </div>
+
+            <div className="md:col-span-2 mt-4">
+              <h3 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2 mb-4">SEO Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">SEO Title</label>
+                  <input type="text" name="seoTitle" value={formData.seoTitle} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">SEO Description</label>
+                  <textarea name="seoDescription" value={formData.seoDescription} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" rows={2}></textarea>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">SEO Keywords (Comma Separated)</label>
+                  <input type="text" name="seoKeywords" value={formData.seoKeywords} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="e.g. sports, shirts, custom uniforms" />
+                </div>
+              </div>
             </div>
           </div>
           

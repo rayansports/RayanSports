@@ -11,6 +11,7 @@ import ProductsTab from '@/components/admin/ProductsTab';
 import SettingsTab from '@/components/admin/SettingsTab';
 import UsersTab from '@/components/admin/UsersTab';
 import OrdersTab from '@/components/admin/OrdersTab';
+import PagesTab from '@/components/admin/PagesTab';
 import { Menu } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -98,6 +99,7 @@ export default function AdminDashboard() {
       case 'products': return <ProductsTab />;
       case 'settings': return <SettingsTab />;
       case 'users': return <UsersTab />;
+      case 'pages': return <PagesTab />;
       default: return (
         <div className="bg-white p-16 text-center rounded-2xl border border-slate-200 shadow-sm animate-in fade-in flex flex-col items-center justify-center max-w-2xl mx-auto mt-10">
           <div className="w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mb-6">

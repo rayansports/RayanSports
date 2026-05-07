@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, setDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType } from '@/app/admin/utils';
+import { GripVertical } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 
 export default function SlideshowTab() {
@@ -56,6 +57,54 @@ export default function SlideshowTab() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `slideshow/${id}`);
     }
+  };
+
+  const [draggedSlideIndex, setDraggedSlideIndex] = useState<number | null>(null);
+  const [dragOverSlideIndex, setDragOverSlideIndex] = useState<number | null>(null);
+
+  const handleSlideDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedSlideIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleSlideDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverSlideIndex !== index) {
+      setDragOverSlideIndex(index);
+    }
+  };
+
+  const handleSlideDrop = async (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedSlideIndex === null || draggedSlideIndex === index) {
+      setDragOverSlideIndex(null);
+      setDraggedSlideIndex(null);
+      return;
+    }
+    
+    const newSlides = [...slides];
+    const item = newSlides.splice(draggedSlideIndex, 1)[0];
+    newSlides.splice(index, 0, item);
+    
+    setSlides(newSlides); // optimistic update
+    
+    // Update all affected orders in firestore
+    try {
+      await Promise.all(newSlides.map((slide, i) => 
+        updateDoc(doc(db, 'slideshow', slide.id), { order: i })
+      ));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'slideshow');
+    }
+
+    setDraggedSlideIndex(null);
+    setDragOverSlideIndex(null);
+  };
+
+  const handleSlideDragEnd = () => {
+    setDraggedSlideIndex(null);
+    setDragOverSlideIndex(null);
   };
 
   const editSlide = (slide: any) => {
@@ -139,10 +188,21 @@ export default function SlideshowTab() {
         {slides.length === 0 ? (
           <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-sm text-slate-500 font-medium shadow-sm">No slides in the database yet. Use the form to add one.</div>
         ) : (
-          slides.map(slide => (
-            <div key={slide.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center shadow-sm relative overflow-hidden transition-all hover:border-brand-blue/30 group">
+          slides.map((slide, idx) => (
+            <div 
+              key={slide.id} 
+              className={`bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center shadow-sm relative overflow-hidden transition-all hover:border-brand-blue/30 group pl-10 ${dragOverSlideIndex === idx ? 'border-brand-blue border-2 border-dashed bg-blue-50/50 scale-[1.01]' : ''} ${draggedSlideIndex === idx ? 'opacity-50 scale-[0.98]' : ''}`}
+              draggable
+              onDragStart={(e) => handleSlideDragStart(e, idx)}
+              onDragOver={(e) => handleSlideDragOver(e, idx)}
+              onDrop={(e) => handleSlideDrop(e, idx)}
+              onDragEnd={handleSlideDragEnd}
+            >
+              <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 hover:bg-slate-50 border-r border-slate-100 transition-colors">
+                <GripVertical className="w-4 h-4" />
+              </div>
               <div className="w-full sm:w-48 h-32 bg-slate-100 flex-shrink-0 relative rounded-lg border border-slate-200 overflow-hidden">
-                <img src={slide.image} alt={slide.title} className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                <img src={slide.image} alt={slide.title} className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" draggable={false} referrerPolicy="no-referrer" />
                 {!slide.enabled && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[10px] font-black tracking-widest">DISABLED</div>}
               </div>
               <div className="flex-1 min-w-0 w-full text-center sm:text-left">

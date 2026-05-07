@@ -91,7 +91,11 @@ service cloud.firestore {
         && (data.features.size() == 0 || data.features[0] is string)
         && data.createdAt == request.time
         && (data.get('videoUrl', '') is string && string.length(data.get('videoUrl', '')) <= 1000)
-        && (data.get('mediaUrls', []) is list && data.get('mediaUrls', []).size() <= 10);
+        && (data.get('mediaUrls', []) is list && data.get('mediaUrls', []).size() <= 10)
+        && (data.get('price', '') is string && string.length(data.get('price', '')) <= 100)
+        && (data.get('sku', '') is string && string.length(data.get('sku', '')) <= 100)
+        && (data.get('isActive', true) is bool)
+        && (data.get('articles', []) is list && data.get('articles', []).size() <= 100);
     }
 
     function isValidProductUpdate(incomingData, existingData) {
@@ -105,7 +109,11 @@ service cloud.firestore {
         && (incomingData.features.size() == 0 || incomingData.features[0] is string)
         && incomingData.createdAt == existingData.createdAt
         && (incomingData.get('videoUrl', '') is string && string.length(incomingData.get('videoUrl', '')) <= 1000)
-        && (incomingData.get('mediaUrls', []) is list && incomingData.get('mediaUrls', []).size() <= 10);
+        && (incomingData.get('mediaUrls', []) is list && incomingData.get('mediaUrls', []).size() <= 10)
+        && (incomingData.get('price', '') is string && string.length(incomingData.get('price', '')) <= 100)
+        && (incomingData.get('sku', '') is string && string.length(incomingData.get('sku', '')) <= 100)
+        && (incomingData.get('isActive', true) is bool)
+        && (incomingData.get('articles', []) is list && incomingData.get('articles', []).size() <= 100);
     }
 
     // Categories Collection
@@ -215,6 +223,22 @@ service cloud.firestore {
       allow create: if isAdmin() && isValidUser(incoming());
       allow update: if isAdmin() && isValidUserUpdate(incoming(), existing());
       allow delete: if isAdmin() && userId != request.auth.uid;
+    }
+    function isValidPage(data) {
+      return data.keys().hasAll(['title', 'slug', 'content', 'metaDescription', 'isActive', 'createdAt', 'updatedAt'])
+        && data.title is string && data.title.size() <= 200
+        && data.slug is string && data.slug.size() <= 200 && data.slug.matches('^[a-z0-9-]+$')
+        && data.content is string && data.content.size() <= 50000
+        && data.metaDescription is string && data.metaDescription.size() <= 500
+        && data.isActive is bool
+        && data.updatedAt is timestamp;
+    }
+
+    match /pages/{pageId} {
+      allow read: if true;
+      allow create: if isValidId(pageId) && isAdmin() && isValidPage(incoming()) && incoming().createdAt == request.time;
+      allow update: if isValidId(pageId) && isAdmin() && isValidPage(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isValidId(pageId) && isAdmin();
     }
   }
 }

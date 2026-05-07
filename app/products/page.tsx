@@ -8,8 +8,8 @@ export const metadata: Metadata = {
   description: 'Browse our extensive range of high-quality custom sportswear categories including Team Uniforms, Activewear, and Casual wear manufactured in Sialkot.',
 };
 
-export default function ProductsPage() {
-  const categories = getCategories();
+export default async function ProductsPage() {
+  const categories = await getCategories();
 
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900">

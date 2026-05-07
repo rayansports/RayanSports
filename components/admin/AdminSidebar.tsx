@@ -45,6 +45,7 @@ export default function AdminSidebar({ activeTab, setActiveTab, isOpen, setIsOpe
       icon: Briefcase,
       items: [
         { id: 'slideshow', label: 'Slideshow CMS', icon: ImageIcon },
+        { id: 'pages', label: 'CMS Pages', icon: Store },
         { id: 'users', label: 'Users & Roles', icon: Users },
         { id: 'settings', label: 'Platform Settings', icon: Settings },
       ]

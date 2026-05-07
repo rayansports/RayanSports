@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   description: 'RayanSports is a leading manufacturer & exporter of premium custom sportswear, team uniforms, fitness apparel, and accessories based in Sialkot, Pakistan. Global delivery & OEM services.',
 };
 
-export default function Home() {
-  const categories = getCategories();
+export default async function Home() {
+  const categories = await getCategories();
 
   return (
     <div className="flex flex-col min-h-screen text-slate-900 font-sans">

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, setDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType, exportToCSV } from '@/app/admin/utils';
-import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search, Download } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search, Download, GripVertical } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 import Dropdown from './Dropdown';
 
@@ -24,8 +24,11 @@ export default function ProductsTab() {
   const initialCategoryState = { parentId: '', name: '', slug: '', image: '', description: '' };
   const [categoryForm, setCategoryForm] = useState(initialCategoryState);
 
-  const initialProductState = { categoryId: '', name: '', slug: '', image: '', videoUrl: '', mediaUrls: [''], description: '', features: [''] };
-  const [productForm, setProductForm] = useState(initialProductState);
+  const initialProductState = { categoryId: '', name: '', slug: '', image: '', videoUrl: '', mediaUrls: [''], description: '', features: [''], price: '', sku: '', isActive: true, articles: [] };
+  const [productForm, setProductForm] = useState<{ categoryId: string, name: string, slug: string, image: string, videoUrl: string, mediaUrls: string[], description: string, features: string[], price: string, sku: string, isActive: boolean, articles: { articleNumber: string, name: string, color: string, image: string }[] }>(initialProductState);
+
+  const [draggedMediaIndex, setDraggedMediaIndex] = useState<number | null>(null);
+  const [dragOverMediaIndex, setDragOverMediaIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const qCategories = query(collection(db, 'categories'), orderBy('name', 'asc'));
@@ -68,7 +71,11 @@ export default function ProductsTab() {
         videoUrl: product.videoUrl || '',
         mediaUrls: product.mediaUrls && product.mediaUrls.length ? product.mediaUrls : [''],
         description: product.description || '', 
-        features: product.features && product.features.length ? product.features : [''] 
+        features: product.features && product.features.length ? product.features : [''],
+        price: product.price || '',
+        sku: product.sku || '',
+        isActive: product.isActive !== undefined ? product.isActive : true,
+        articles: product.articles && product.articles.length ? product.articles : []
       });
     } else {
       setEditingId(null);
@@ -126,7 +133,11 @@ export default function ProductsTab() {
         slug: productForm.slug || generateSlug(productForm.name),
         image: productForm.image,
         description: productForm.description,
-        features: productForm.features.filter(f => f.trim() !== '')
+        features: productForm.features.filter(f => f.trim() !== ''),
+        price: productForm.price,
+        sku: productForm.sku,
+        isActive: productForm.isActive,
+        articles: productForm.articles.filter(a => a.name.trim() !== '')
       };
 
       if (productForm.videoUrl) payload.videoUrl = productForm.videoUrl;
@@ -179,14 +190,96 @@ export default function ProductsTab() {
   const addFeature = () => setProductForm({ ...productForm, features: [...productForm.features, ''] });
   const removeFeature = (index: number) => setProductForm({ ...productForm, features: productForm.features.filter((_, i) => i !== index) });
 
+  const handleArticleChange = (index: number, field: string, value: string) => {
+    const newArticles = [...productForm.articles];
+    newArticles[index] = { ...newArticles[index], [field]: value };
+    setProductForm({ ...productForm, articles: newArticles });
+  };
+
+  const addArticle = () => setProductForm({ ...productForm, articles: [...productForm.articles, { articleNumber: '', name: '', color: '', image: '' }] });
+  const removeArticle = (index: number) => setProductForm({ ...productForm, articles: productForm.articles.filter((_, i) => i !== index) });
+
   const handleMediaChange = (index: number, value: string) => {
     const newMedia = [...productForm.mediaUrls];
     newMedia[index] = value;
     setProductForm({ ...productForm, mediaUrls: newMedia });
   };
   
+  const [draggedArticleIndex, setDraggedArticleIndex] = useState<number | null>(null);
+  const [dragOverArticleIndex, setDragOverArticleIndex] = useState<number | null>(null);
+
+  const handleArticleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedArticleIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleArticleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverArticleIndex !== index) {
+      setDragOverArticleIndex(index);
+    }
+  };
+
+  const handleArticleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedArticleIndex === null || draggedArticleIndex === index) {
+      setDragOverArticleIndex(null);
+      setDraggedArticleIndex(null);
+      return;
+    }
+    
+    const newArticles = [...productForm.articles];
+    const item = newArticles.splice(draggedArticleIndex, 1)[0];
+    newArticles.splice(index, 0, item);
+    
+    setProductForm({ ...productForm, articles: newArticles });
+    setDraggedArticleIndex(null);
+    setDragOverArticleIndex(null);
+  };
+
+  const handleArticleDragEnd = () => {
+    setDraggedArticleIndex(null);
+    setDragOverArticleIndex(null);
+  };
+
   const addMedia = () => setProductForm({ ...productForm, mediaUrls: [...productForm.mediaUrls, ''] });
   const removeMedia = (index: number) => setProductForm({ ...productForm, mediaUrls: productForm.mediaUrls.filter((_, i) => i !== index) });
+
+  const handleMediaDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedMediaIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleMediaDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverMediaIndex !== index) {
+      setDragOverMediaIndex(index);
+    }
+  };
+
+  const handleMediaDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedMediaIndex === null || draggedMediaIndex === index) {
+      setDragOverMediaIndex(null);
+      setDraggedMediaIndex(null);
+      return;
+    }
+    
+    const newMediaUrls = [...productForm.mediaUrls];
+    const item = newMediaUrls.splice(draggedMediaIndex, 1)[0];
+    newMediaUrls.splice(index, 0, item);
+    
+    setProductForm({ ...productForm, mediaUrls: newMediaUrls });
+    setDraggedMediaIndex(null);
+    setDragOverMediaIndex(null);
+  };
+
+  const handleMediaDragEnd = () => {
+    setDraggedMediaIndex(null);
+    setDragOverMediaIndex(null);
+  };
 
   const filteredProducts = products.filter(p => {
     if (selectedCategory !== 'all' && p.categoryId !== selectedCategory) return false;
@@ -296,7 +389,28 @@ export default function ProductsTab() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">URL Slug</label>
-                    <input type="text" value={productForm.slug} onChange={e => setProductForm({...productForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="pro-team-jersey" />
+                    <input type="text" value={productForm.slug} onChange={e => setProductForm({...productForm, slug: generateSlug(e.target.value)})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="pro-team-jersey" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Price (Optional)</label>
+                    <input type="text" value={productForm.price || ''} onChange={e => setProductForm({...productForm, price: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="e.g. $45.00" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">SKU / Product Code</label>
+                    <input type="text" value={productForm.sku || ''} onChange={e => setProductForm({...productForm, sku: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-all placeholder:text-slate-300" placeholder="e.g. RS-JSY-01" />
+                  </div>
+                  <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">Product Status</h3>
+                      <p className="text-xs text-slate-500 mt-1">If turned off, this product will be hidden from the storefront.</p>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setProductForm({ ...productForm, isActive: !productForm.isActive })}
+                      className={`flex items-center justify-center p-1 rounded-full transition-colors w-12 h-6 ${productForm.isActive ? 'bg-brand-blue' : 'bg-slate-300'}`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${productForm.isActive ? 'translate-x-3' : '-translate-x-3'}`}></div>
+                    </button>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Primary Image URL</label>
@@ -339,28 +453,39 @@ export default function ProductsTab() {
                     </label>
                     <div className="space-y-4">
                       {productForm.mediaUrls.map((media, idx) => (
-                        <div key={idx} className="flex gap-3 relative group">
-                          <div className="flex-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative">
+                        <div 
+                          key={idx} 
+                          className={`flex gap-3 relative group transition-all duration-200 ${dragOverMediaIndex === idx ? 'border-brand-blue border-2 border-dashed bg-blue-50/50 rounded-lg p-2' : ''} ${draggedMediaIndex === idx ? 'opacity-50 scale-[0.98]' : ''}`}
+                          draggable
+                          onDragStart={(e) => handleMediaDragStart(e, idx)}
+                          onDragOver={(e) => handleMediaDragOver(e, idx)}
+                          onDrop={(e) => handleMediaDrop(e, idx)}
+                          onDragEnd={handleMediaDragEnd}
+                        >
+                          <div className="flex items-center justify-center px-1 cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500">
+                            <GripVertical className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 bg-white p-3 rounded-lg border border-slate-200 shadow-sm relative transition-shadow hover:shadow-md">
                             {productForm.mediaUrls.length > 1 && (
-                              <button type="button" onClick={() => removeMedia(idx)} className="absolute right-2 top-2 p-1.5 bg-red-50 text-red-500 hover:bg-red-100 rounded z-10 transition-colors">
+                              <button type="button" title="Delete media" onClick={() => removeMedia(idx)} className="absolute right-2 top-2 p-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded z-10 transition-colors">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             )}
-                            <div className="relative mb-3">
-                              <ImageIcon className="absolute left-3 top-3 w-4 h-4 text-slate-300" />
+                            <div className="relative mb-3 pt-8 sm:pt-0 lg:pr-10">
+                              <ImageIcon className="absolute left-3 top-11 sm:top-3 w-4 h-4 text-slate-400" />
                               <input 
                                 type="url" 
                                 value={media} 
                                 onChange={e => handleMediaChange(idx, e.target.value)} 
-                                className="w-full border border-slate-300 rounded-lg py-2.5 pr-10 pl-9 text-sm focus:ring-1 focus:ring-brand-blue outline-none transition-all" 
-                                placeholder="https://... secondary image/video" 
+                                className="w-full border border-slate-300 rounded-lg py-2.5 pr-4 pl-9 text-sm focus:ring-1 focus:ring-brand-blue outline-none transition-all mt-8 sm:mt-0" 
+                                placeholder="https://... secondary image url" 
                               />
                             </div>
-                            <MediaUploader label="Upload Media" onUploadSuccess={(url) => handleMediaChange(idx, url)} />
+                            <MediaUploader label="Upload Image" onUploadSuccess={(url) => handleMediaChange(idx, url)} />
                           </div>
                           {media && (
-                            <div className="w-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50 h-auto">
-                              <img src={media} alt="Thumb" className="w-full h-full object-cover" />
+                            <div className="w-24 sm:w-32 rounded-lg border border-slate-200 overflow-hidden flex-shrink-0 bg-slate-50 h-auto self-stretch flex items-center justify-center">
+                              <img src={media} alt="Thumb" className="max-w-full max-h-full object-contain" draggable={false} />
                             </div>
                           )}
                         </div>
@@ -392,6 +517,63 @@ export default function ProductsTab() {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Articles List */}
+                  <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-800 mb-3 flex items-center justify-between">
+                      <span>Specific Articles / Variations</span>
+                      <button type="button" onClick={addArticle} className="text-brand-blue hover:text-blue-800 flex items-center gap-1">+ Add Article</button>
+                    </label>
+                    <div className="space-y-4">
+                      {productForm.articles.map((article, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`bg-white p-4 rounded-lg border border-slate-200 relative transition-all duration-200 group pl-10 ${dragOverArticleIndex === idx ? 'border-brand-blue border-2 border-dashed bg-blue-50/50 scale-[1.01]' : ''} ${draggedArticleIndex === idx ? 'opacity-50 scale-[0.98]' : ''}`}
+                          draggable
+                          onDragStart={(e) => handleArticleDragStart(e, idx)}
+                          onDragOver={(e) => handleArticleDragOver(e, idx)}
+                          onDrop={(e) => handleArticleDrop(e, idx)}
+                          onDragEnd={handleArticleDragEnd}
+                        >
+                          <div className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 hover:bg-slate-50 rounded-l-lg border-r border-slate-100 transition-colors">
+                            <GripVertical className="w-4 h-4" />
+                          </div>
+                          <button type="button" title="Delete article" onClick={() => removeArticle(idx)} className="absolute right-2 top-2 p-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded z-10 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 pr-8">
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Article #</label>
+                              <input required type="text" value={article.articleNumber} onChange={e => handleArticleChange(idx, 'articleNumber', e.target.value)} className="w-full border border-slate-300 rounded p-2 text-xs focus:ring-1 focus:ring-brand-blue outline-none" placeholder="RS-001" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Name</label>
+                              <input required type="text" value={article.name} onChange={e => handleArticleChange(idx, 'name', e.target.value)} className="w-full border border-slate-300 rounded p-2 text-xs focus:ring-1 focus:ring-brand-blue outline-none" placeholder="Blue Away Kit" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Color</label>
+                              <input type="text" value={article.color} onChange={e => handleArticleChange(idx, 'color', e.target.value)} className="w-full border border-slate-300 rounded p-2 text-xs focus:ring-1 focus:ring-brand-blue outline-none" placeholder="Royal Blue / White" />
+                            </div>
+                          </div>
+                          <div className="flex gap-4 items-end">
+                            <div className="flex-1">
+                              <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Image URL</label>
+                              <input required type="url" value={article.image} onChange={e => handleArticleChange(idx, 'image', e.target.value)} className="w-full border border-slate-300 rounded p-2 text-xs focus:ring-1 focus:ring-brand-blue outline-none mb-2" placeholder="https://..." />
+                              <MediaUploader label="Upload Image" onUploadSuccess={(url) => handleArticleChange(idx, 'image', url)} />
+                            </div>
+                            {article.image && (
+                              <div className="w-20 h-20 rounded border border-slate-200 overflow-hidden shrink-0 bg-slate-50">
+                                <img src={article.image} alt={article.name} className="w-full h-full object-cover" draggable={false} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {productForm.articles.length === 0 && (
+                         <div className="text-center py-4 text-xs text-slate-400 font-medium border-2 border-dashed border-slate-200 rounded-lg">No articles appended. Click &quot;+ Add Article&quot; to add variations.</div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import { getCategoryBySlug } from '@/lib/catalog';
 
 export async function generateMetadata({ params }: { params: Promise<{ categorySlug: string }> }): Promise<Metadata> {
   const resolvedParams = await params;
-  const category = getCategoryBySlug(resolvedParams.categorySlug);
+  const category = await getCategoryBySlug(resolvedParams.categorySlug);
 
   if (!category) {
     return { title: 'Category Not Found' };
@@ -26,13 +26,13 @@ export async function generateMetadata({ params }: { params: Promise<{ categoryS
 export default async function CategoryPage({ params }: { params: Promise<{ categorySlug: string }> }) {
   const resolvedParams = await params;
   
-  const category = getCategoryBySlug(resolvedParams.categorySlug);
+  const category = await getCategoryBySlug(resolvedParams.categorySlug);
   
   if (!category) {
     notFound();
   }
 
-  const categoryProducts = category.products;
+  const categoryProducts = category.products || [];
 
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900">
