@@ -276,8 +276,28 @@ export default function OrdersTab() {
 
         {/* Order Details Panel */}
         {selectedOrder && (
-          <div className="xl:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] sticky top-6 animate-in slide-in-from-right-4">
-            <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div className="xl:col-span-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col max-h-[calc(100vh-8rem)] sticky top-6 animate-in slide-in-from-right-4 print-target print:max-h-none print:border-none print:shadow-none">
+            <style>{`
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .print-target, .print-target * {
+                  visibility: visible;
+                }
+                .print-target {
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                  width: 100%;
+                  height: auto;
+                }
+                .no-print {
+                  display: none !important;
+                }
+              }
+            `}</style>
+            <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between no-print">
               <h3 className="font-black uppercase tracking-widest text-slate-900 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-brand-blue" />
                 Order Details
@@ -295,7 +315,13 @@ export default function OrdersTab() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 print:overflow-visible">
+              
+              <div className="hidden print:block mb-8 pb-4 border-b border-slate-200 text-center">
+                <h1 className="text-2xl font-black uppercase tracking-widest text-slate-900 mb-1">RAYAN SPORTS</h1>
+                <p className="text-sm font-medium text-slate-500">Sales Order Receipt</p>
+              </div>
+
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Order Number</p>
@@ -307,7 +333,7 @@ export default function OrdersTab() {
                 </div>
               </div>
 
-              <div>
+              <div className="no-print">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Update Status</p>
                 <div className="grid grid-cols-2 gap-2">
                   {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (

@@ -11,7 +11,7 @@ import {
 import { Activity, MessageSquare, PlusCircle, Package, Layers, ShoppingCart, DollarSign, TrendingUp, Clock } from 'lucide-react';
 import { format, subDays, isSameDay } from 'date-fns';
 
-export default function DashboardTab() {
+export default function DashboardTab({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
   const [inquiries, setInquiries] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -105,7 +105,9 @@ export default function DashboardTab() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
+        <div 
+          onClick={() => setActiveTab('orders')}
+          className="cursor-pointer bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
             <DollarSign className="w-32 h-32" />
           </div>
@@ -118,7 +120,9 @@ export default function DashboardTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
+        <div 
+          onClick={() => setActiveTab('orders')}
+          className="cursor-pointer bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
             <ShoppingCart className="w-32 h-32" />
           </div>
@@ -137,7 +141,9 @@ export default function DashboardTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
+        <div 
+          onClick={() => setActiveTab('inquiries')}
+          className="cursor-pointer bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-amber-50 transition-colors">
             <MessageSquare className="w-32 h-32" />
           </div>
@@ -156,7 +162,9 @@ export default function DashboardTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
+        <div 
+          onClick={() => setActiveTab('products')}
+          className="cursor-pointer bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-brand-blue/30 transition-colors">
           <div className="absolute -right-6 -top-6 text-slate-50 group-hover:text-blue-50 transition-colors">
             <Package className="w-32 h-32" />
           </div>

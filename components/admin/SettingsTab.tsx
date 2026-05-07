@@ -21,7 +21,11 @@ export default function SettingsTab() {
     maintenanceMode: false,
     seoTitle: 'Rayan Sports',
     seoDescription: 'High quality sports wear',
-    seoKeywords: 'sports, wear, custom'
+    seoKeywords: 'sports, wear, custom',
+    socialFacebook: '',
+    socialInstagram: '',
+    socialTwitter: '',
+    socialTiktok: ''
   });
 
   useEffect(() => {
@@ -148,6 +152,28 @@ export default function SettingsTab() {
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">SEO Keywords (Comma Separated)</label>
                   <input type="text" name="seoKeywords" value={formData.seoKeywords} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="e.g. sports, shirts, custom uniforms" />
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 mt-4">
+              <h3 className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-2 mb-4">Social Media Links</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Facebook URL</label>
+                  <input type="url" name="socialFacebook" value={formData.socialFacebook} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="https://facebook.com/..." />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Instagram URL</label>
+                  <input type="url" name="socialInstagram" value={formData.socialInstagram} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="https://instagram.com/..." />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Twitter/X URL</label>
+                  <input type="url" name="socialTwitter" value={formData.socialTwitter} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="https://twitter.com/..." />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">TikTok URL</label>
+                  <input type="url" name="socialTiktok" value={formData.socialTiktok} onChange={handleChange} className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-brand-blue outline-none transition-shadow hover:border-slate-400" placeholder="https://tiktok.com/@..." />
                 </div>
               </div>
             </div>

@@ -92,7 +92,7 @@ export default function AdminDashboard() {
 
   const renderTabContent = () => {
     switch(activeTab) {
-      case 'dashboard': return <DashboardTab />;
+      case 'dashboard': return <DashboardTab setActiveTab={setActiveTab} />;
       case 'inquiries': return <InquiriesTab />;
       case 'orders': return <OrdersTab />;
       case 'slideshow': return <SlideshowTab />;

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, setDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { handleFirestoreError, OperationType, exportToCSV } from '@/app/admin/utils';
-import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search, Download, GripVertical } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, Image as ImageIcon, Search, Download, GripVertical, Copy } from 'lucide-react';
 import MediaUploader from './MediaUploader';
 import Dropdown from './Dropdown';
 
@@ -179,6 +179,27 @@ export default function ProductsTab() {
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `products/${id}`);
     }
+  };
+
+  const duplicateProduct = (product: any, evt: React.MouseEvent) => {
+    evt.stopPropagation();
+    setIsFormOpen(true);
+    setFormType('product');
+    setEditingId(null);
+    setProductForm({ 
+      categoryId: product.categoryId, 
+      name: product.name + ' (Copy)', 
+      slug: generateSlug(product.name + ' Copy'), 
+      image: product.image, 
+      videoUrl: product.videoUrl || '', 
+      mediaUrls: product.mediaUrls && product.mediaUrls.length ? product.mediaUrls : [''],
+      description: product.description, 
+      features: product.features && product.features.length ? product.features : [''],
+      price: product.price || '',
+      sku: product.sku ? product.sku + '-COPY' : '',
+      isActive: false,
+      articles: product.articles ? [...product.articles] : []
+    });
   };
 
   const handleFeatureChange = (index: number, value: string) => {
@@ -699,8 +720,9 @@ export default function ProductsTab() {
                   <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm p-1 rounded-lg">
-                      <button onClick={() => openProductForm(product)} className="p-1.5 text-slate-600 hover:text-brand-blue hover:bg-blue-50 rounded transition-colors"><Edit2 className="w-3.5 h-3.5"/></button>
-                      <button onClick={() => deleteProduct(product.id, product.name)} className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
+                      <button onClick={(e) => { e.stopPropagation(); openProductForm(product); }} title="Edit" className="p-1.5 text-slate-600 hover:text-brand-blue hover:bg-blue-50 rounded transition-colors"><Edit2 className="w-3.5 h-3.5"/></button>
+                      <button onClick={(e) => { e.stopPropagation(); duplicateProduct(product, e); }} title="Duplicate" className="p-1.5 text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"><Copy className="w-3.5 h-3.5"/></button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteProduct(product.id, product.name); }} title="Delete" className="p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 className="w-3.5 h-3.5"/></button>
                     </div>
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
