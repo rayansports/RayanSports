@@ -8,9 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig([
-    { ignores: ['dist/**/*', '.next/**/*'] },
+    { ignores: ['dist/**/*', '.next/**/*', 'firestore.rules'] },
+    ...next,
     {
-        extends: [...next],
+        rules: {
+            '@next/next/no-img-element': 'off'
+        }
     },
     firebaseRulesPlugin.configs['flat/recommended']
 ]);

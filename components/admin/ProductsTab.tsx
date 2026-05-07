@@ -31,13 +31,13 @@ export default function ProductsTab() {
     const qCategories = query(collection(db, 'categories'), orderBy('name', 'asc'));
     const unSubCategories = onSnapshot(qCategories, (snapshot) => {
       setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, error => handleFirestoreError(error, OperationType.LIST, 'categories'));
+    }, error => { try { handleFirestoreError(error, OperationType.LIST, 'categories'); } catch(e) {} });
 
     const qProducts = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
     const unSubProducts = onSnapshot(qProducts, (snapshot) => {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
-    }, error => handleFirestoreError(error, OperationType.LIST, 'products'));
+    }, error => { try { handleFirestoreError(error, OperationType.LIST, 'products'); } catch(e) {} });
 
     return () => {
       unSubCategories();
@@ -515,7 +515,6 @@ export default function ProductsTab() {
               {filteredProducts.map(product => (
                 <div key={product.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all hover:border-brand-blue/30 group flex flex-col">
                   <div className="aspect-[4/3] bg-slate-100 relative overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={product.image} alt={product.name} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm p-1 rounded-lg">
                       <button onClick={() => openProductForm(product)} className="p-1.5 text-slate-600 hover:text-brand-blue hover:bg-blue-50 rounded transition-colors"><Edit2 className="w-3.5 h-3.5"/></button>

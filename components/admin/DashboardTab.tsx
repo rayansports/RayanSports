@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { handleFirestoreError, OperationType } from '@/app/admin/utils';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar,
   LineChart, Line
@@ -21,21 +22,30 @@ export default function DashboardTab() {
     const qInq = query(collection(db, 'inquiries'), orderBy('createdAt', 'asc'));
     const unSubInq = onSnapshot(qInq, (snapshot) => {
       setInquiries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      try { handleFirestoreError(error, OperationType.LIST, 'inquiries'); } catch(e) {}
     });
 
     const qProducts = query(collection(db, 'products'));
     const unSubProd = onSnapshot(qProducts, (snapshot) => {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      try { handleFirestoreError(error, OperationType.LIST, 'products'); } catch(e) {}
     });
 
     const qCategories = query(collection(db, 'categories'));
     const unSubCat = onSnapshot(qCategories, (snapshot) => {
       setCategories(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (error) => {
+      try { handleFirestoreError(error, OperationType.LIST, 'categories'); } catch(e) {}
     });
 
     const qOrders = query(collection(db, 'orders'), orderBy('createdAt', 'asc'));
     const unSubOrders = onSnapshot(qOrders, (snapshot) => {
       setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLoading(false);
+    }, (error) => {
+      try { handleFirestoreError(error, OperationType.LIST, 'orders'); } catch(e) {}
       setLoading(false);
     });
 

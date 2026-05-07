@@ -21,11 +21,14 @@ export default function InquiriesTab() {
       setInquiries(data);
       setLoadingData(false);
     }, (error) => {
-      const msg = handleFirestoreError(error, OperationType.LIST, 'inquiries');
-      if (msg.includes('Missing or insufficient permissions')) {
-        setDataError('Permission Denied: Your account is not authorized as an Admin.');
-      } else {
-        setDataError(msg);
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'inquiries');
+      } catch (err: any) {
+        if (err.message.includes('Missing or insufficient permissions')) {
+          setDataError('Permission Denied: Your account is not authorized as an Admin.');
+        } else {
+          setDataError(err.message);
+        }
       }
       setLoadingData(false);
     });

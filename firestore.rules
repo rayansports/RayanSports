@@ -134,10 +134,10 @@ service cloud.firestore {
 
     function isValidOrder(data) {
       return data.keys().hasAll(['orderNumber', 'customerName', 'customerEmail', 'items', 'totalAmount', 'status', 'createdAt'])
-        && data.orderNumber is string
+        && data.orderNumber is string && data.orderNumber.size() <= 100
         && data.customerName is string && data.customerName.size() <= 100
         && data.customerEmail is string && data.customerEmail.size() <= 100
-        && data.items is list
+        && data.items is list && data.items.size() <= 100
         && data.totalAmount is number
         && data.status in ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
         && data.createdAt == request.time;
@@ -204,7 +204,7 @@ service cloud.firestore {
     match /admins/{adminId} {
       allow get: if isSignedIn();
       allow list: if isAdmin();
-      allow create: if isAdmin() && incoming().keys().hasOnly(['email', 'role']) && incoming().email is string && incoming().role is string;
+      allow create: if isAdmin() && incoming().keys().hasOnly(['email', 'role']) && incoming().email is string && incoming().email.size() <= 200 && incoming().role is string && incoming().role.size() <= 100;
       allow update: if false; // Immutable roles
       allow delete: if isAdmin() && adminId != request.auth.uid; // Manual removal only
     }

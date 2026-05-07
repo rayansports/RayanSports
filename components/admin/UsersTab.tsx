@@ -25,13 +25,13 @@ export default function UsersTab() {
     const qAdmins = query(collection(db, 'admins'));
     const unSubAdmins = onSnapshot(qAdmins, (snapshot) => {
       setAdmins(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    }, error => handleFirestoreError(error, OperationType.LIST, 'admins'));
+    }, error => { try { handleFirestoreError(error, OperationType.LIST, 'admins'); } catch(e) {} });
 
     const qUsers = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
     const unSubUsers = onSnapshot(qUsers, (snapshot) => {
       setUsers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
-    }, error => handleFirestoreError(error, OperationType.LIST, 'users'));
+    }, error => { try { handleFirestoreError(error, OperationType.LIST, 'users'); } catch(e) {} });
 
     return () => {
       unSubAdmins();

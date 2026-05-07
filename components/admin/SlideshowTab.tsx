@@ -20,8 +20,11 @@ export default function SlideshowTab() {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSlides(data);
     }, (error) => {
-      const msg = handleFirestoreError(error, OperationType.LIST, 'slideshow');
-      setDataError(msg);
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'slideshow');
+      } catch (err: any) {
+        setDataError(err.message);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -139,7 +142,6 @@ export default function SlideshowTab() {
           slides.map(slide => (
             <div key={slide.id} className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center shadow-sm relative overflow-hidden transition-all hover:border-brand-blue/30 group">
               <div className="w-full sm:w-48 h-32 bg-slate-100 flex-shrink-0 relative rounded-lg border border-slate-200 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={slide.image} alt={slide.title} className="object-cover w-full h-full transform group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                 {!slide.enabled && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[10px] font-black tracking-widest">DISABLED</div>}
               </div>

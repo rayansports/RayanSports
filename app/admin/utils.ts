@@ -16,15 +16,18 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
       emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
     },
     operationType,
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  if (operationType !== OperationType.LIST && operationType !== OperationType.GET) {
-    alert(`Firestore Action Failed: ${errInfo.error}\nIf permission denied, ensure you are an admin.`);
-  }
-  return errInfo.error;
+  throw new Error(JSON.stringify(errInfo));
 }
 
 export function exportToCSV(data: any[], filename: string) {

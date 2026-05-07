@@ -33,7 +33,11 @@ export default function OrdersTab() {
       setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     }, error => {
-      handleFirestoreError(error, OperationType.LIST, 'orders');
+      try {
+        handleFirestoreError(error, OperationType.LIST, 'orders');
+      } catch (err) {
+        // Ignored or logged globally
+      }
       setLoading(false);
     });
 
